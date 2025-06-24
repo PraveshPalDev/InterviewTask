@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@gcou/react-native-linkedin": "^2.3.1",
-    "@react-native-async-storage/async-storage": "^1.24.0",
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-google-signin/google-signin": "^15.0.0",
     "@react-native/new-app-screen": "0.80.0",
     "@react-navigation/elements": "^2.5.1",
