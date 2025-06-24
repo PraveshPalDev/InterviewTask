@@ -2,17 +2,65 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React from 'react';
 import WrapperComp from '../../components/WrapperComp';
 import { socialLoginData } from '../../constant/authData';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 export default function LoginScreen() {
-  const socialLogin = title => {
+  const navigation = useNavigation();
+
+  const googleLoginHandler = async () => {
+    try {
+      GoogleSignin.configure({
+        scopes: ['https://www.googleapis.com/auth/drive'],
+        webClientId:
+          '298950216382-2qgfk6trdt5e528jtpbuk6v1gurcbhu0.apps.googleusercontent.com',
+        iosClientId:
+          '298950216382-ogkjd2gpvik3q2r4eufq8h9mu90jhg0i.apps.googleusercontent.com ',
+        offlineAccess: true,
+        forceCodeForRefreshToken: true,
+        profileImageSize: 120,
+      });
+
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      console.log('Google User Info:', userInfo);
+      if (userInfo.type === 'success') {
+        await AsyncStorage.setItem('userInfo', JSON.stringify(userInfo.data));
+        navigation.navigate('Home', {
+          loginData: userInfo.data,
+        });
+      }
+    } catch (error) {
+      console.error('Google Sign-In Error:', error);
+    }
+  };
+
+  const fbLoginHandler = async () => {
+    return { user: 'Facebook User' };
+  };
+
+  const linkedinLoginHandler = async () => {};
+
+  const twitterLoginHandler = async () => {
+    return { user: 'Twitter User' };
+  };
+
+  const socialLogin = async title => {
     if (title === 'Google Login') {
-      console.log('Google Login Pressed');
+      await googleLoginHandler();
     } else if (title === 'FaceBook Login') {
-      console.log('Facebook Login Pressed');
+      const res = await fbLoginHandler();
+      if (res !== null && res !== undefined) {
+        navigation.navigate('Home');
+      }
     } else if (title === 'Linkedin Login') {
-      console.log('Facebook Login Pressed');
+      await linkedinLoginHandler();
     } else if (title === 'Twitter Login') {
-      console.log('Facebook Login Pressed');
+      const res = await twitterLoginHandler();
+      if (res !== null && res !== undefined) {
+        navigation.navigate('Home');
+      }
     }
   };
 
@@ -52,7 +100,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '80%',
-    height: 400,
+    height: 350,
     borderRadius: 10,
     padding: 15,
     alignSelf: 'center',
