@@ -1,0 +1,4 @@
+export const CONFIG = {
+  API_BASE_URL: 'https://dummyjson.com',
+  API_TIMEOUT: 15000,
+};

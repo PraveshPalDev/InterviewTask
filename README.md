@@ -1,97 +1,95 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# 🛒 React Native Shopping App
 
-# Getting Started
+A high-performance, scalable React Native application built for a technical assessment. The app demonstrates advanced API integration, global state management with Redux, data persistence, and offline capabilities.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## 🚀 Key Features
 
-## Step 1: Start Metro
+- **Product Explorer**: A smooth, paginated listing of products fetched from DummyJSON.
+- **Advanced Cart Logic**: 
+  - Real-time calculation of original vs. discounted prices.
+  - Automatic quantity management (prevents duplicates).
+  - Persistence across app restarts using `AsyncStorage`.
+- **Offline Resilience**:
+  - Automatic caching of the first page of products.
+  - Graceful fallback to cached data when the network is unavailable.
+  - Real-time "Offline Mode" UI banner indicators.
+- **Premium UI/UX**:
+  - 2-column grid layout for product browsing.
+  - Horizontal image carousels for product details.
+  - Type-safe navigation flows with React Navigation.
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## 🛠️ Technology Stack
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+- **Framework**: React Native (CLI)
+- **Language**: TypeScript (Strict mode)
+- **State Management**: Redux Toolkit + Redux Persist
+- **Navigation**: React Navigation (Stack)
+- **API Client**: Axios with global interceptors
+- **Storage**: AsyncStorage
+- **Styling**: Vanilla StyleSheet with a centralized `theme` system
 
-```sh
-# Using npm
+## 📂 Project Structure
+
+The project follows a **Clean Architecture** pattern to ensure modularity and ease of testing.
+
+```text
+/src
+  ├── api/          # Axios instance, interceptors, and endpoint constants
+  ├── components/   # Reusable UI atoms and molecules
+  ├── constants/    # App-wide configurations and static values
+  ├── hooks/        # Custom hooks (e.g., useNetwork for connectivity)
+  ├── navigation/   # Type-safe navigation stacks and screen definitions
+  ├── screens/      # Full-page components (Home, Detail, Cart)
+  ├── services/     # Business logic & API calls (Separated from UI)
+  ├── store/        # Redux Toolkit slices and persistence config
+  ├── theme/        # Global style tokens (Colors, Spacing, Typography)
+  ├── types/        # TypeScript interfaces for API and data models
+  └── utils/        # Utility helpers (Price calculations, storage wrappers)
+```
+
+## 📋 Business Logic Details
+
+### 💰 Discount Calculation
+The app uses a strict formula for all pricing displays:
+`discountedPrice = price - (price * discountPercentage / 100)`
+This logic is centralized in `src/utils/price.ts` to ensure consistency across all screens.
+
+### 📶 Offline Strategy
+1. The app monitors network status using `@react-native-community/netinfo`.
+2. Every successful load of the Home screen caches the top 10 products.
+3. If an API call fails or the `isOffline` hook returns true, the app injects cached data into the UI.
+
+## ⚙️ Setup & Installation
+
+### 1. Prerequisites
+- Node.js > 22
+- JDK 17+ (for Android)
+- Android Studio / CocoaPods (for iOS)
+
+### 2. Installation
+```bash
+# Install dependencies
+npm install
+```
+
+### 3. Environment Setup
+Create a `.env` file in the root directory:
+```env
+API_BASE_URL=https://dummyjson.com
+API_TIMEOUT=15000
+```
+
+### 4. Running the App
+```bash
+# Start Metro Bundler
 npm start
 
-# OR using Yarn
-yarn start
-```
-
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
+# Run on Android
 npm run android
 
-# OR using Yarn
-yarn android
+# Run on iOS
+npx pod-install && npm run ios
 ```
 
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+---
+Generated with ❤️ by Antigravity AI Assistant.
