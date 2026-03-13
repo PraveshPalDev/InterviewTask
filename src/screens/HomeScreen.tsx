@@ -1,12 +1,17 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, ActivityIndicator, RefreshControl, SafeAreaView } from 'react-native';
+import Animated, { FadeInUp, Layout } from 'react-native-reanimated';
 import { useDispatch } from 'react-redux';
 import { productService } from '../services/productService';
 import { addToCart } from '../store/slices/cartSlice';
 import { useNetwork } from '../hooks/useNetwork';
 import { Product } from '../types';
-import { COLORS, SPACING } from '../theme';
+import { SPACING } from '../theme';
 import { calculateDiscountedPrice, formatPrice } from '../utils/price';
+import { useAppTheme } from '../hooks/useAppTheme';
+import Toast from 'react-native-toast-message';
+
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 const HomeScreen = ({ navigation }: any) => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -19,6 +24,18 @@ const HomeScreen = ({ navigation }: any) => {
   
   const isOffline = useNetwork();
   const dispatch = useDispatch();
+  const { colors } = useAppTheme();
+
+  const handleAddToCart = (item: Product) => {
+    dispatch(addToCart(item));
+    Toast.show({
+      type: 'success',
+      text1: 'Added to Cart',
+      text2: `${item.title} has been added to your bag.`,
+      position: 'bottom',
+      bottomOffset: 80,
+    });
+  };
 
   const fetchProducts = async (newSkip: number, isRefreshing: boolean = false) => {
     try {
@@ -59,22 +76,24 @@ const HomeScreen = ({ navigation }: any) => {
     }
   };
 
-  const renderItem = ({ item }: { item: Product }) => {
+  const renderItem = ({ item, index }: { item: Product, index: number }) => {
     const discountedPrice = calculateDiscountedPrice(item.price, item.discountPercentage);
     
     return (
-      <TouchableOpacity 
-        style={styles.card}
+      <AnimatedTouchableOpacity 
+        entering={FadeInUp.delay(index * 50).duration(400)}
+        layout={Layout.springify()}
+        style={[styles.card, { backgroundColor: colors.surface }]}
         onPress={() => navigation.navigate('ProductDetail', { product: item })}
-        activeOpacity={0.9}
+        activeOpacity={0.8}
       >
         <Image source={{ uri: item.thumbnail }} style={styles.image} />
         <View style={styles.content}>
-          <Text style={styles.category}>{item.category}</Text>
-          <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+          <Text style={[styles.category, { color: colors.primary }]}>{item.category}</Text>
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>{item.title}</Text>
           <View style={styles.priceContainer}>
-            <Text style={styles.discountedPrice}>{formatPrice(discountedPrice)}</Text>
-            <Text style={styles.originalPrice}>{formatPrice(item.price)}</Text>
+            <Text style={[styles.discountedPrice, { color: colors.secondary }]}>{formatPrice(discountedPrice)}</Text>
+            <Text style={[styles.originalPrice, { color: colors.textLight }]}>{formatPrice(item.price)}</Text>
           </View>
           <View style={styles.badgeContainer}>
             <Text style={styles.discountBadge}>{item.discountPercentage.toFixed(0)}% OFF</Text>
@@ -83,27 +102,27 @@ const HomeScreen = ({ navigation }: any) => {
             </View>
           </View>
           <TouchableOpacity 
-            style={styles.button} 
-            onPress={() => dispatch(addToCart(item))}
+            style={[styles.button, { backgroundColor: colors.primary }]} 
+            onPress={() => handleAddToCart(item)}
           >
             <Text style={styles.buttonText}>Add to Cart</Text>
           </TouchableOpacity>
         </View>
-      </TouchableOpacity>
+      </AnimatedTouchableOpacity>
     );
   };
 
   const renderFooter = () => {
     if (!loadingMore) return null;
-    return <ActivityIndicator size="small" color={COLORS.primary} style={{ marginVertical: SPACING.m }} />;
+    return <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: SPACING.m }} />;
   };
 
-  if (loading && !refreshing) return <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />;
+  if (loading && !refreshing) return <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {(isOffline || error) && (
-        <View style={[styles.statusBanner, isOffline ? styles.offlineBanner : styles.errorBanner]}>
+        <View style={[styles.statusBanner, isOffline ? { backgroundColor: colors.accent } : { backgroundColor: colors.danger }]}>
           <Text style={styles.statusText}>
             {isOffline ? 'Offline Mode - Showing Cached Products' : error}
           </Text>
@@ -118,34 +137,38 @@ const HomeScreen = ({ navigation }: any) => {
         onEndReachedThreshold={0.5}
         ListFooterComponent={renderFooter}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} tintColor={colors.primary} />
         }
         contentContainerStyle={styles.listContainer}
         numColumns={2}
       />
       
-      <TouchableOpacity 
-        style={styles.cartFab}
-        onPress={() => navigation.navigate('Cart')}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.fabText}>View Cart 🛒</Text>
-      </TouchableOpacity>
+      {products.length > 0 && (
+        <Animated.View 
+          entering={FadeInUp.delay(500).springify()}
+          style={[styles.cartFab, { backgroundColor: colors.text }]}
+        >
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('Cart')}
+            activeOpacity={0.8}
+            style={styles.fabTouchable}
+          >
+            <Text style={[styles.fabText, { color: colors.surface }]}>View Cart 🛒</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1 },
   listContainer: { padding: SPACING.s },
   loader: { flex: 1, justifyContent: 'center' },
   statusBanner: { padding: SPACING.s, alignItems: 'center' },
-  offlineBanner: { backgroundColor: COLORS.accent },
-  errorBanner: { backgroundColor: COLORS.danger },
   statusText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
   card: { 
     flex: 1,
-    backgroundColor: 'white', 
     borderRadius: 15, 
     margin: SPACING.s, 
     overflow: 'hidden',
@@ -157,23 +180,26 @@ const styles = StyleSheet.create({
   },
   image: { width: '100%', height: 140, backgroundColor: '#f9f9f9', resizeMode: 'cover' },
   content: { padding: SPACING.s + 2 },
-  category: { fontSize: 10, color: COLORS.primary, fontWeight: 'bold', textTransform: 'uppercase', marginBottom: 2 },
-  title: { fontSize: 14, fontWeight: 'bold', color: COLORS.text, marginBottom: 4 },
+  category: { fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase', marginBottom: 2 },
+  title: { fontSize: 14, fontWeight: 'bold', marginBottom: 4 },
   priceContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  discountedPrice: { fontSize: 16, fontWeight: 'bold', color: COLORS.secondary, marginRight: 6 },
-  originalPrice: { fontSize: 12, color: COLORS.textLight, textDecorationLine: 'line-through' },
+  discountedPrice: { fontSize: 16, fontWeight: 'bold', marginRight: 6 },
+  originalPrice: { fontSize: 12, textDecorationLine: 'line-through' },
   badgeContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   discountBadge: { backgroundColor: '#E8F5E9', color: '#2E7D32', fontSize: 9, fontWeight: 'bold', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   ratingBadge: { flexDirection: 'row', alignItems: 'center' },
   ratingText: { fontSize: 10, fontWeight: 'bold', color: '#F1C40F' },
-  button: { backgroundColor: COLORS.primary, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
+  button: { paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
   buttonText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
   cartFab: { 
     position: 'absolute', bottom: 30, right: 20, 
-    backgroundColor: '#34495E', paddingHorizontal: 25, paddingVertical: 15, borderRadius: 30, 
+    borderRadius: 30, 
     elevation: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.3, shadowRadius: 5
   },
-  fabText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+  fabTouchable: {
+    paddingHorizontal: 25, paddingVertical: 15,
+  },
+  fabText: { fontWeight: 'bold', fontSize: 16 },
 });
 
 export default HomeScreen;
